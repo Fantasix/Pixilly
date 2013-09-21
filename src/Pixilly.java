@@ -22,9 +22,9 @@ public class Pixilly implements Constants {
                 put(MIN_ROOM_SIZE, 4);
                 put(MAX_ROOM_SIZE, 10);
                 put(TRIES_PER_ROOM, 10);
-                put(ROOM_AMOUNT, 1);
+                put(ROOM_AMOUNT, 20);
                 put(OPACITY_SWITCH, 0);
-                put(ROOM_BRANCHING, 5);
+                put(ROOM_BRANCHING, 4);
                 put(MIN_EXPANSION_SIZE, 4);
                 put(MAX_EXPANSION_SIZE, 8);
             }

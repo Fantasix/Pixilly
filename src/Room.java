@@ -25,6 +25,13 @@ public class Room {
         return tiles;
     }
 
+    public void setTile(int x, int y, int t) {
+        int index = hasTile(x, y);
+        if (index != -1) {
+            tiles.get(index).setType(t);
+        }
+    }
+
     public ArrayList<Tile> getFreeTiles() {
         return freeTiles;
     }
@@ -95,5 +102,10 @@ public class Room {
             }
         }
         return false;
+    }
+
+    public void clearEdgeTiles() {
+        edgeTiles.clear();
+        edgeTiles = new ArrayList<Tile>();
     }
 }

@@ -2,16 +2,26 @@
  * Project : Pixilly
  * Package : PACKAGE_NAME
  * User: Fantasix
- * Date: 20/09/13
- * Time: 15:01
+ * Date: 21/09/13
+ * Time: 18:32
  */
-public class Cell implements Constants {
+public class Tile {
+    private int type;
     private int x;
     private int y;
 
-    public Cell(int x, int y) {
+    public Tile(int x, int y, int type) {
         this.x = x;
         this.y = y;
+        this.type = type;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 
     public int getX() {
@@ -30,4 +40,3 @@ public class Cell implements Constants {
         this.y = y;
     }
 }
-

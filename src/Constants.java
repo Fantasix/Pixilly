@@ -17,6 +17,7 @@ public interface Constants {
     final static int MAX_MAP_WIDTH = 80;
     final static int MAX_MAP_HEIGHT = 40;
 
+    // Map Params
     final static int MIN_ROOM_SIZE = 0;
     final static int MAX_ROOM_SIZE = 1;
     final static int ROOM_AMOUNT = 2;
@@ -25,6 +26,9 @@ public interface Constants {
     final static int CORRIDOR_RATIO = 5;
     final static int MIN_CORRIDOR_SIZE = 6;
     final static int MAX_CORRIDOR_SIZE = 7;
+    final static int OPACITY_SWITCH = 8;
+    final static int MIN_EXPANSION_SIZE = 9;
+    final static int MAX_EXPANSION_SIZE = 10;
 
     // Tiles
     final static int TILE_SIZE = 16;

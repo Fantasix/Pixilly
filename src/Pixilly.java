@@ -20,6 +20,8 @@ public class Pixilly implements Constants {
         HashMap<Integer, Integer> params = new HashMap<Integer, Integer>() {
             {
                 put(MIN_ROOM_SIZE, 4);
+                put(TRIES_PER_ROOM, 10);
+                put(ROOM_AMOUNT, 50);
             }
         };
 

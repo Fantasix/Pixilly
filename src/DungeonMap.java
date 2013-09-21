@@ -19,14 +19,15 @@ public class DungeonMap implements Constants {
     private int sizeX;
     private int sizeY;
     private long seed;
-    private int digs = 0;
+    private int roomCount = 0;
 
     // Params
     private HashMap<Integer, Integer> params = new HashMap<Integer, Integer>() {
         {
             put(MIN_ROOM_SIZE, 3);
             put(MAX_ROOM_SIZE, 10);
-            put(ROOM_RATIO, 10);
+            put(ROOM_AMOUNT, 10);
+            put(TRIES_PER_ROOM, 10);
             put(ROOM_BRANCHING, 4);
             put(CORRIDOR_RATIO, 5);
             put(MIN_CORRIDOR_SIZE, 2);
@@ -115,7 +116,7 @@ public class DungeonMap implements Constants {
         }
 
         // Variables
-
+        int roomTries = 0;
 
         // Map Init
         mapTiles = new int[sizeX][sizeY];
@@ -133,8 +134,9 @@ public class DungeonMap implements Constants {
         // First Room
         makeRoom((int) Math.floor(sizeX / 2), (int) Math.floor(sizeY / 2));
 
-        for (int i = 0; i < 40; i++) {
+        while (roomCount < getParam(ROOM_AMOUNT) && roomTries < getParam(TRIES_PER_ROOM) * (getParam(ROOM_AMOUNT) - 1)) {
             newRandomRoom();
+            roomTries++;
         }
         return true;
     }
@@ -170,7 +172,7 @@ public class DungeonMap implements Constants {
         int roomHeight = getRand(getParam(MIN_ROOM_SIZE), getParam(MAX_ROOM_SIZE));
 
         // It's the first room
-        if (digs == 0) {
+        if (roomCount == 0) {
             roomX -= Math.floor(roomWidth / 2);
             roomY -= Math.floor(roomHeight / 2);
         } else {
@@ -188,10 +190,10 @@ public class DungeonMap implements Constants {
             }
         }
 
-        System.out.println("Tentative de création d'une salle à " + roomX + "-" + roomY + " (" + roomWidth + "x" + roomHeight + ")");
+        // System.out.println("Tentative de création d'une salle à " + roomX + "-" + roomY + " (" + roomWidth + "x" + roomHeight + ")");
         // Checking if the base cell is available
         if (canPlaceRoom(roomX, roomY, roomWidth, roomHeight)) {
-            System.out.println("La salle peut être placée.");
+
             for (int x = roomX; x < roomX + roomWidth; x++) {
 
                 for (int y = roomY; y < roomY + roomHeight; y++) {
@@ -238,7 +240,7 @@ public class DungeonMap implements Constants {
             success = false;
         }
 
-        if (success) digs++;
+        if (success) roomCount++;
         return success;
     }
 
@@ -297,14 +299,29 @@ public class DungeonMap implements Constants {
     }
 
     // Get the corresponding tile number
-    public int getTileNumber(int tileType) {
+    public int getTileNumber(int x, int y) {
+        int tileType = getTile(x, y);
+
         switch (tileType) {
             case TILE_FLOOR:
-                return getRand(9, 11);
+                return getRand(12, 14);
             case TILE_FLOOR_EDGE:
                 return getRand(12, 14);
             case TILE_WALL:
-                return 1;
+
+                int x1 = 0;
+                int x2 = 0;
+                // Check on left
+                while (getTile(x - x1, y) == TILE_WALL) x1++;
+                // Check on right
+                while (getTile(x + x2, y) == TILE_WALL) x2++;
+
+                if (getTile(x - x1, y) == TILE_WALL_CORNER && getTile(x + x2, y) == TILE_WALL_CORNER) {
+                    return 5;
+                } else {
+                    return 6;
+                }
+
             case TILE_WALL_CORNER:
                 return 4;
             case TILE_DOOR:
@@ -325,7 +342,7 @@ public class DungeonMap implements Constants {
 
             for (int x = 0; x < sizeX; x++) {
 
-                int tile = getTileNumber(mapTiles[x][y]);
+                int tile = getTileNumber(x, y);
 
                 int tileSetXTiles = TILE_SET.getWidth(null) / TILE_SIZE;
                 int tileSetYTiles = TILE_SET.getHeight(null) / TILE_SIZE;

@@ -19,11 +19,12 @@ public interface Constants {
 
     final static int MIN_ROOM_SIZE = 0;
     final static int MAX_ROOM_SIZE = 1;
-    final static int ROOM_RATIO = 2;
-    final static int ROOM_BRANCHING = 3;
-    final static int CORRIDOR_RATIO = 4;
-    final static int MIN_CORRIDOR_SIZE = 5;
-    final static int MAX_CORRIDOR_SIZE = 6;
+    final static int ROOM_AMOUNT = 2;
+    final static int TRIES_PER_ROOM = 3;
+    final static int ROOM_BRANCHING = 4;
+    final static int CORRIDOR_RATIO = 5;
+    final static int MIN_CORRIDOR_SIZE = 6;
+    final static int MAX_CORRIDOR_SIZE = 7;
 
     // Tiles
     final static int TILE_SIZE = 16;

@@ -33,15 +33,14 @@ public class DungeonMap implements Constants {
             put(MIN_CORRIDOR_SIZE, 2);
             put(MAX_CORRIDOR_SIZE, 6);
             put(OPACITY_SWITCH, 1);
+            put(ROOM_ID_SWITCH, 0);
             put(MIN_EXPANSION_SIZE, 3);
             put(MAX_EXPANSION_SIZE, 6);
         }
     };
 
-    // private Room[][] mapRooms;
     private int[][] mapTiles;
     private ArrayList<Cell> mapFreeWalls = new ArrayList<Cell>();
-    private ArrayList<Cell> mapFreeFloors = new ArrayList<Cell>();
     private ArrayList<Room> mapRooms = new ArrayList<Room>();
 
     public DungeonMap(int sizeX, int sizeY) {
@@ -81,14 +80,14 @@ public class DungeonMap implements Constants {
         return null;
     }
 
-    public int isWall(int x, int y) {
-        Cell c = new Cell(x, y);
-        return mapFreeWalls.indexOf(c);
-    }
+    public int getMaxDepth() {
+        int d = 0;
 
-    public int isFloor(int x, int y) {
-        Cell c = new Cell(x, y);
-        return mapFreeFloors.indexOf(c);
+        for (Room r : mapRooms) {
+            d = r.getDepth() > d ? r.getDepth() : d;
+        }
+
+        return d;
     }
 
     public Object chooseRandom(ArrayList array) {
@@ -112,16 +111,6 @@ public class DungeonMap implements Constants {
 
     private int getParam(int param) {
         return params.get(param);
-    }
-
-    public boolean generate() {
-        return this.generate(new HashMap<Integer, Integer>());
-    }
-
-    public boolean generate(HashMap<Integer, Integer> params, int seed) {
-        this.seed = seed;
-
-        return this.generate(params);
     }
 
     public boolean generate(HashMap<Integer, Integer> inParams) {
@@ -238,7 +227,7 @@ public class DungeonMap implements Constants {
 
             for (int y = roomY; y < roomY + roomHeight; y++) {
 
-                if (mapTiles[x][y] != TILE_EMPTY && mapTiles[x][y] != TILE_WALL && mapTiles[x][y] != TILE_WALL_CORNER) {
+                if (getTile(x, y) != TILE_EMPTY && getTile(x, y) != TILE_WALL && getTile(x, y) != TILE_WALL_CORNER) {
                     return false;
                 }
 
@@ -289,7 +278,6 @@ public class DungeonMap implements Constants {
         int rY = tile.getY() - yOffset;
 
         if (canExpandRoom(rX, rY, exWidth, exHeight, room)) {
-            System.out.println("Expansion :  " + rX + "-" + rY + " (" + exWidth + "x" + exHeight + ")");
 
             for (int x = rX; x < rX + exWidth; x++) {
 
@@ -360,7 +348,6 @@ public class DungeonMap implements Constants {
                                 room.addTile(x, y, TILE_FLOOR);
                                 room.removeEdgeTile(new Cell(x, y));
                                 mapFreeWalls.remove(new Cell(x, y));
-                                mapFreeFloors.add(new Cell(x, y));
                             }
                         }
                     }
@@ -371,7 +358,6 @@ public class DungeonMap implements Constants {
 
                 setTile(t.getX(), t.getY(), TILE_FLOOR);
                 room.setTile(t.getX(), t.getY(), TILE_FLOOR);
-                mapFreeFloors.add(new Cell(t.getX(), t.getY()));
 
             }
             room.clearEdgeTiles();
@@ -388,7 +374,6 @@ public class DungeonMap implements Constants {
                                     setTile(x + x1, y + y1, TILE_FLOOR_EDGE);
                                     room.setTile(x + x1, y + y1, TILE_FLOOR);
                                     room.addEdgeTile(x + x1, y + y1, TILE_FLOOR_EDGE);
-                                    mapFreeFloors.remove(new Cell(x + x1, y + y1));
                                 }
                             }
                         }
@@ -408,6 +393,7 @@ public class DungeonMap implements Constants {
 
     public Room makeRoom(int roomX, int roomY, int offsetX, int offsetY) {
         Room newRoom = null;
+        int depth = 0;
         int roomWidth = getRand(getParam(MIN_ROOM_SIZE), getParam(MAX_ROOM_SIZE));
         int roomHeight = getRand(getParam(MIN_ROOM_SIZE), getParam(MAX_ROOM_SIZE));
 
@@ -416,6 +402,9 @@ public class DungeonMap implements Constants {
             roomX -= Math.floor(roomWidth / 2);
             roomY -= Math.floor(roomHeight / 2);
         } else {
+
+            Room origin = getRoom(roomX, roomY);
+            depth = origin != null ? origin.getDepth() + 1 : 0;
 
             if (offsetX == 1) {
                 roomY = getRand(roomY - roomHeight + 2, roomY - 1);
@@ -430,12 +419,12 @@ public class DungeonMap implements Constants {
             }
         }
 
-        // System.out.println("Tentative de création d'une salle à " + roomX + "-" + roomY + " (" + roomWidth + "x" + roomHeight + ")");
         // Checking if the base cell is available
         if (canPlaceRoom(roomX, roomY, roomWidth, roomHeight)) {
 
-            newRoom = new Room(mapRooms.size());
-            System.out.println("Room :  " + roomX + "-" + roomY + " (" + roomWidth + "x" + roomHeight + ")");
+            newRoom = new Room(mapRooms.size(), depth);
+            System.out.println("Depth : " + depth);
+
             for (int x = roomX; x < roomX + roomWidth; x++) {
 
                 for (int y = roomY; y < roomY + roomHeight; y++) {
@@ -480,7 +469,6 @@ public class DungeonMap implements Constants {
                         } else {
                             if (getTile(x, y) == TILE_EMPTY) {
                                 setTile(x, y, TILE_FLOOR);
-                                mapFreeFloors.add(new Cell(x, y));
                                 newRoom.addTile(x, y, TILE_FLOOR);
                                 newRoom.addFreeTile(x, y, TILE_FLOOR);
                             }
@@ -493,10 +481,9 @@ public class DungeonMap implements Constants {
             }
 
             mapRooms.add(newRoom);
-
+            roomCount++;
         }
 
-        if (newRoom != null) roomCount++;
         return newRoom;
     }
 
@@ -509,19 +496,19 @@ public class DungeonMap implements Constants {
         int offsetY = 0;
         int doorX = theDoor.getX(), doorY = theDoor.getY();
         // East
-        if (mapTiles[doorX + 1][doorY] == TILE_EMPTY) {
+        if (getTile(doorX + 1, doorY) == TILE_EMPTY) {
             offsetX = 1;
         }
         // West
-        else if (mapTiles[doorX - 1][doorY] == TILE_EMPTY) {
+        else if (getTile(doorX - 1, doorY) == TILE_EMPTY) {
             offsetX = -1;
         }
         // North
-        else if (mapTiles[doorX][doorY - 1] == TILE_EMPTY) {
+        else if (getTile(doorX, doorY - 1) == TILE_EMPTY) {
             offsetY = -1;
         }
         // South
-        else if (mapTiles[doorX][doorY + 1] == TILE_EMPTY) {
+        else if (getTile(doorX, doorY + 1) == TILE_EMPTY) {
             offsetY = 1;
         }
 
@@ -610,21 +597,21 @@ public class DungeonMap implements Constants {
                 g2.drawImage(TILE_SET, x * TILE_SIZE, y * TILE_SIZE, x * TILE_SIZE + TILE_SIZE, y * TILE_SIZE + TILE_SIZE, srcX, srcY, srcX + TILE_SIZE, srcY + TILE_SIZE, null);
 
                 // Room ids
-                /*if (getTile(x, y) != TILE_EMPTY){
-                    for (Room r: mapRooms){
-                        int index = r.hasTile(x, y) ;
-                        if (index != -1){
-                            g2.drawString(""+r.getId(), x * TILE_SIZE, y * TILE_SIZE + 10);
+                if (getParam(ROOM_ID_SWITCH) == 1 && getTile(x, y) != TILE_EMPTY) {
+                    for (Room r : mapRooms) {
+                        int index = r.hasTile(x, y);
+                        if (index != -1) {
+                            g2.drawString("" + r.getDepth(), x * TILE_SIZE, y * TILE_SIZE + 10);
                             break;
                         }
                     }
-                }*/
+                }
 
                 // Opacity
                 if (getParam(OPACITY_SWITCH) == 1) {
                     Room theRoom = getRoom(x, y);
                     if (theRoom != null) {
-                        double opacity = Math.floor(((double) theRoom.getId() / mapRooms.size()) * 255);
+                        double opacity = Math.floor(((double) theRoom.getDepth() / (getMaxDepth() + 1)) * 255);
                         g2.setColor(new Color(0, 0, 0, (int) opacity));
                         g2.fillRect(x * TILE_SIZE, y * TILE_SIZE, 16, 16);
                     }

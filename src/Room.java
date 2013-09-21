@@ -9,6 +9,7 @@ import java.util.ArrayList;
  */
 public class Room {
     private int id;
+    private int depth = 0;
     private ArrayList<Tile> tiles = new ArrayList<Tile>();
     private ArrayList<Tile> freeTiles = new ArrayList<Tile>();
     private ArrayList<Tile> edgeTiles = new ArrayList<Tile>();
@@ -17,8 +18,21 @@ public class Room {
         this.id = id;
     }
 
+    public Room(int id, int depth) {
+        this.id = id;
+        this.depth = depth;
+    }
+
     public int getId() {
         return id;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
+
+    public void setDepth(int depth) {
+        this.depth = depth;
     }
 
     public ArrayList<Tile> getTiles() {

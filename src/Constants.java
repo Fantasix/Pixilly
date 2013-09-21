@@ -29,6 +29,7 @@ public interface Constants {
     final static int OPACITY_SWITCH = 8;
     final static int MIN_EXPANSION_SIZE = 9;
     final static int MAX_EXPANSION_SIZE = 10;
+    final static int ROOM_ID_SWITCH = 11;
 
     // Tiles
     final static int TILE_SIZE = 16;

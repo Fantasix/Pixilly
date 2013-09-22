@@ -23,14 +23,15 @@ public class Pixilly implements Constants {
                 put(TRIES_PER_ROOM, 10);
                 put(MIN_ROOM_SIZE, 4);
                 put(MAX_ROOM_SIZE, 8);
+                put(FIRST_ROOM_SIZE_RATIO, 2);
 
-                put(ROOM_EXPANSION, 4);
-                put(TRIES_PER_EXPANSION, 10);
+                put(ROOM_EXPANSION, 6);
+                put(TRIES_PER_EXPANSION, 2);
                 put(MIN_EXPANSION_SIZE, 4);
                 put(MAX_EXPANSION_SIZE, 8);
 
                 put(OPACITY_SWITCH, 0);
-                put(ROOM_ID_SWITCH, 1);
+                put(ROOM_ID_SWITCH, 0);
                 put(CLEAN_WALLS_SWITCH, 1);
             }
         };

@@ -32,6 +32,7 @@ public interface Constants {
     final static int ROOM_ID_SWITCH = 11;
     final static int TRIES_PER_EXPANSION = 12;
     final static int CLEAN_WALLS_SWITCH = 13;
+    final static int FIRST_ROOM_SIZE_RATIO = 14;
 
     // Tiles
     final static int TILE_SIZE = 16;

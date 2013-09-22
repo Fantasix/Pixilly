@@ -28,15 +28,19 @@ public class DungeonMap implements Constants {
             put(MAX_ROOM_SIZE, 10);
             put(ROOM_AMOUNT, 10);
             put(TRIES_PER_ROOM, 10);
+            put(FIRST_ROOM_SIZE_RATIO, 1);
+
             put(ROOM_EXPANSION, 4);
             put(TRIES_PER_EXPANSION, 6);
+            put(MIN_EXPANSION_SIZE, 3);
+            put(MAX_EXPANSION_SIZE, 6);
+
             put(CORRIDOR_RATIO, 5);
             put(MIN_CORRIDOR_SIZE, 2);
             put(MAX_CORRIDOR_SIZE, 6);
+
             put(OPACITY_SWITCH, 1);
             put(ROOM_ID_SWITCH, 0);
-            put(MIN_EXPANSION_SIZE, 3);
-            put(MAX_EXPANSION_SIZE, 6);
             put(CLEAN_WALLS_SWITCH, 1);
         }
     };
@@ -486,6 +490,8 @@ public class DungeonMap implements Constants {
 
         // It's the first room
         if (roomCount == 0) {
+            roomWidth = (int) Math.floor(roomWidth * getParam(FIRST_ROOM_SIZE_RATIO));
+            roomHeight = (int) Math.floor(roomHeight * getParam(FIRST_ROOM_SIZE_RATIO));
             roomX -= Math.floor(roomWidth / 2);
             roomY -= Math.floor(roomHeight / 2);
         } else {

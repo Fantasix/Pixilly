@@ -13,7 +13,7 @@ public class Pixilly implements Constants {
     private static DungeonMap theMap;
 
     public static void main(String[] args) {
-        System.out.println("Lancement de l'application test  ");
+        System.out.println("Start");
         // Dungeon Map init
         theMap = new DungeonMap(MAX_MAP_WIDTH, MAX_MAP_HEIGHT);
 
@@ -25,7 +25,7 @@ public class Pixilly implements Constants {
                 put(ROOM_AMOUNT, 20);
                 put(OPACITY_SWITCH, 1);
                 put(ROOM_ID_SWITCH, 0);
-                put(ROOM_BRANCHING, 4);
+                put(ROOM_BRANCHING, 30);
                 put(MIN_EXPANSION_SIZE, 4);
                 put(MAX_EXPANSION_SIZE, 8);
             }

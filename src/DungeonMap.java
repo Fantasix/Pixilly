@@ -141,80 +141,91 @@ public class DungeonMap implements Constants {
         for (int i = 0; i < getParam(ROOM_BRANCHING); i++) {
             expandRoom(room);
         }
-
+        finishingFixes(room);
         while (roomCount < getParam(ROOM_AMOUNT) && roomTries < getParam(TRIES_PER_ROOM) * (getParam(ROOM_AMOUNT) - 1)) {
             room = newRandomRoom();
             if (room != null) {
                 for (int i = 0; i < getParam(ROOM_BRANCHING); i++) {
                     expandRoom(room);
                 }
-
+                finishingFixes(room);
             }
             roomTries++;
         }
 
-        // Finishing fixes
-        for (int x = 1; x < sizeX - 1; x++) {
-            for (int y = 1; y < sizeY; y++) {
+        System.out.println("Rooms : " + mapRooms.size() + "/" + getParam(ROOM_AMOUNT));
+        System.out.println("Max Depth : " + getMaxDepth());
 
-                // Wall fix (1 vertical wall & 1 horizontal wall)
-                if (getTile(x, y) == TILE_WALL) {
+        return true;
+    }
 
-                    int xCount = 0;
-                    int yCount = 0;
+    public void finishingFixes(Room room) {
+        if (room != null) {
+            for (int x = 1; x < sizeX - 1; x++) {
+                for (int y = 1; y < sizeY; y++) {
 
-                    if (getTile(x + 1, y) == TILE_WALL) xCount++;
-                    if (getTile(x - 1, y) == TILE_WALL) xCount++;
-                    if (getTile(x, y + 1) == TILE_WALL) yCount++;
-                    if (getTile(x, y - 1) == TILE_WALL) yCount++;
+                    // Wall fix (1 vertical wall & 1 horizontal wall)
+                    if (getTile(x, y) == TILE_WALL) {
 
-                    if (xCount > 0 && yCount > 0) setTile(x, y, TILE_WALL_CORNER);
-                }
+                        int xCount = 0;
+                        int yCount = 0;
 
-                // Wall fix (1 Empty 1 wall, 2 corners)
-                if (getTile(x, y) == TILE_WALL) {
+                        if (getTile(x + 1, y) == TILE_WALL) xCount++;
+                        if (getTile(x - 1, y) == TILE_WALL) xCount++;
+                        if (getTile(x, y + 1) == TILE_WALL) yCount++;
+                        if (getTile(x, y - 1) == TILE_WALL) yCount++;
 
-                    int wallCount = 0;
-                    int cornerCount = 0;
-                    int emptyCount = 0;
+                        if (xCount > 0 && yCount > 0) {
+                            setTile(x, y, TILE_WALL_CORNER);
+                            room.setTile(x, y, TILE_WALL_CORNER);
+                        }
+                    }
 
-                    if (getTile(x + 1, y) == TILE_WALL) wallCount++;
-                    if (getTile(x - 1, y) == TILE_WALL) wallCount++;
-                    if (getTile(x, y + 1) == TILE_WALL) wallCount++;
-                    if (getTile(x, y - 1) == TILE_WALL) wallCount++;
+                    // Wall fix (1 Empty 1 wall, 2 corners)
+                    if (getTile(x, y) == TILE_WALL) {
 
-                    if (getTile(x + 1, y) == TILE_WALL_CORNER) cornerCount++;
-                    if (getTile(x - 1, y) == TILE_WALL_CORNER) cornerCount++;
-                    if (getTile(x, y + 1) == TILE_WALL_CORNER) cornerCount++;
-                    if (getTile(x, y - 1) == TILE_WALL_CORNER) cornerCount++;
+                        int wallCount = 0;
+                        int cornerCount = 0;
+                        int emptyCount = 0;
 
-                    if (getTile(x + 1, y) == TILE_EMPTY) emptyCount++;
-                    if (getTile(x - 1, y) == TILE_EMPTY) emptyCount++;
-                    if (getTile(x, y + 1) == TILE_EMPTY) emptyCount++;
-                    if (getTile(x, y - 1) == TILE_EMPTY) emptyCount++;
+                        if (getTile(x + 1, y) == TILE_WALL) wallCount++;
+                        if (getTile(x - 1, y) == TILE_WALL) wallCount++;
+                        if (getTile(x, y + 1) == TILE_WALL) wallCount++;
+                        if (getTile(x, y - 1) == TILE_WALL) wallCount++;
 
-                    if (emptyCount == 1 && wallCount == 1 && cornerCount == 2) setTile(x, y, TILE_WALL_CORNER);
-                }
+                        if (getTile(x + 1, y) == TILE_WALL_CORNER) cornerCount++;
+                        if (getTile(x - 1, y) == TILE_WALL_CORNER) cornerCount++;
+                        if (getTile(x, y + 1) == TILE_WALL_CORNER) cornerCount++;
+                        if (getTile(x, y - 1) == TILE_WALL_CORNER) cornerCount++;
 
-                // Wall fix (2 Edges)
-                if (getTile(x, y) == TILE_WALL) {
-                    int edgeCount = 0;
-                    if (getTile(x + 1, y) == TILE_FLOOR_EDGE) edgeCount++;
-                    if (getTile(x - 1, y) == TILE_FLOOR_EDGE) edgeCount++;
-                    if (getTile(x, y + 1) == TILE_FLOOR_EDGE) edgeCount++;
-                    if (getTile(x, y - 1) == TILE_FLOOR_EDGE) edgeCount++;
+                        if (getTile(x + 1, y) == TILE_EMPTY || getTile(x + 1, y) == TILE_FLOOR_EDGE) emptyCount++;
+                        if (getTile(x - 1, y) == TILE_EMPTY || getTile(x - 1, y) == TILE_FLOOR_EDGE) emptyCount++;
+                        if (getTile(x, y + 1) == TILE_EMPTY || getTile(x, y + 1) == TILE_FLOOR_EDGE) emptyCount++;
+                        if (getTile(x, y - 1) == TILE_EMPTY || getTile(x, y - 1) == TILE_FLOOR_EDGE) emptyCount++;
 
-                    if (edgeCount > 1) {
-                        mapFreeWalls.remove(new Cell(x, y));
-                        room.removeTile(new Cell(x, y));
-                        setTile(x, y, TILE_WALL_CORNER);
-                        room.addTile(x, y, TILE_WALL_CORNER);
+                        if (emptyCount == 1 && wallCount == 1 && cornerCount == 2) {
+                            setTile(x, y, TILE_WALL_CORNER);
+                            room.setTile(x, y, TILE_WALL_CORNER);
+                        }
+                    }
+
+                    // Wall fix (2 Edges)
+                    if (getTile(x, y) == TILE_WALL) {
+                        int edgeCount = 0;
+                        if (getTile(x + 1, y) == TILE_FLOOR_EDGE) edgeCount++;
+                        if (getTile(x - 1, y) == TILE_FLOOR_EDGE) edgeCount++;
+                        if (getTile(x, y + 1) == TILE_FLOOR_EDGE) edgeCount++;
+                        if (getTile(x, y - 1) == TILE_FLOOR_EDGE) edgeCount++;
+
+                        if (edgeCount > 1) {
+                            mapFreeWalls.remove(new Cell(x, y));
+                            setTile(x, y, TILE_WALL_CORNER);
+                            room.setTile(x, y, TILE_WALL_CORNER);
+                        }
                     }
                 }
             }
         }
-
-        return true;
     }
 
     public boolean canPlaceRoom(int roomX, int roomY, int roomWidth, int roomHeight) {
@@ -423,7 +434,6 @@ public class DungeonMap implements Constants {
         if (canPlaceRoom(roomX, roomY, roomWidth, roomHeight)) {
 
             newRoom = new Room(mapRooms.size(), depth);
-            System.out.println("Depth : " + depth);
 
             for (int x = roomX; x < roomX + roomWidth; x++) {
 
@@ -576,7 +586,6 @@ public class DungeonMap implements Constants {
 
     // Return the dungeon map
     public void generateMapImage() {
-        System.out.println("Génération de l'image...");
         BufferedImage dungeonImage = new BufferedImage(sizeX * TILE_SIZE, sizeY * TILE_SIZE, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g2 = dungeonImage.createGraphics();
@@ -596,17 +605,6 @@ public class DungeonMap implements Constants {
 
                 g2.drawImage(TILE_SET, x * TILE_SIZE, y * TILE_SIZE, x * TILE_SIZE + TILE_SIZE, y * TILE_SIZE + TILE_SIZE, srcX, srcY, srcX + TILE_SIZE, srcY + TILE_SIZE, null);
 
-                // Room ids
-                if (getParam(ROOM_ID_SWITCH) == 1 && getTile(x, y) != TILE_EMPTY) {
-                    for (Room r : mapRooms) {
-                        int index = r.hasTile(x, y);
-                        if (index != -1) {
-                            g2.drawString("" + r.getDepth(), x * TILE_SIZE, y * TILE_SIZE + 10);
-                            break;
-                        }
-                    }
-                }
-
                 // Opacity
                 if (getParam(OPACITY_SWITCH) == 1) {
                     Room theRoom = getRoom(x, y);
@@ -614,6 +612,17 @@ public class DungeonMap implements Constants {
                         double opacity = Math.floor(((double) theRoom.getDepth() / (getMaxDepth() + 1)) * 255);
                         g2.setColor(new Color(0, 0, 0, (int) opacity));
                         g2.fillRect(x * TILE_SIZE, y * TILE_SIZE, 16, 16);
+                    }
+                }
+
+                // Room ids
+                if (getParam(ROOM_ID_SWITCH) == 1 && getTile(x, y) != TILE_EMPTY) {
+                    for (Room r : mapRooms) {
+                        int index = r.hasTile(x, y);
+                        if (index != -1) {
+                            g2.drawString("" + r.getId(), x * TILE_SIZE, y * TILE_SIZE + 10);
+                            break;
+                        }
                     }
                 }
             }

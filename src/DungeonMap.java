@@ -90,6 +90,13 @@ public class DungeonMap implements Constants {
         return d;
     }
 
+    public Room getDeepestRoom() {
+        for (Room r : mapRooms) {
+            if (r.getDepth() == getMaxDepth()) return r;
+        }
+        return mapRooms.get(0);
+    }
+
     public Object chooseRandom(ArrayList array) {
         return array.get(getRand(0, array.size() - 1));
     }
@@ -152,6 +159,19 @@ public class DungeonMap implements Constants {
             }
             roomTries++;
         }
+
+        // Adding in and out stairs
+        Room upStairsRoom = mapRooms.get(0);
+        Room downStairsRoom = getDeepestRoom();
+
+        Tile upStairsTile = upStairsRoom.getFreeTiles().size() > 0 ? (Tile) chooseRandom(upStairsRoom.getFreeTiles()) : (Tile) chooseRandom(upStairsRoom.getEdgeTiles());
+        Tile downStairsTile = downStairsRoom.getFreeTiles().size() > 0 ? (Tile) chooseRandom(downStairsRoom.getFreeTiles()) : (Tile) chooseRandom(downStairsRoom.getEdgeTiles());
+
+        upStairsTile.setType(TILE_UPSTAIRS);
+        setTile(upStairsTile.getX(), upStairsTile.getY(), TILE_UPSTAIRS);
+        downStairsTile.setType(TILE_DOWNSTAIRS);
+        setTile(downStairsTile.getX(), downStairsTile.getY(), TILE_DOWNSTAIRS);
+
 
         System.out.println("Rooms : " + mapRooms.size() + "/" + getParam(ROOM_AMOUNT));
         System.out.println("Max Depth : " + getMaxDepth());
@@ -357,6 +377,7 @@ public class DungeonMap implements Constants {
                             if (getTile(x, y) == TILE_EMPTY || getTile(x, y) == TILE_WALL || getTile(x, y) == TILE_WALL_CORNER || getTile(x, y) == TILE_FLOOR_EDGE) {
                                 setTile(x, y, TILE_FLOOR);
                                 room.addTile(x, y, TILE_FLOOR);
+                                room.addFreeTile(x, y, TILE_FLOOR);
                                 room.removeEdgeTile(new Cell(x, y));
                                 mapFreeWalls.remove(new Cell(x, y));
                             }
@@ -579,6 +600,10 @@ public class DungeonMap implements Constants {
                 return 4;
             case TILE_DOOR:
                 return 33;
+            case TILE_UPSTAIRS:
+                return 24;
+            case TILE_DOWNSTAIRS:
+                return 32;
             default:
                 return 0;
         }

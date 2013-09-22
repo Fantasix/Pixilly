@@ -22,7 +22,7 @@ public interface Constants {
     final static int MAX_ROOM_SIZE = 1;
     final static int ROOM_AMOUNT = 2;
     final static int TRIES_PER_ROOM = 3;
-    final static int ROOM_BRANCHING = 4;
+    final static int ROOM_EXPANSION = 4;
     final static int CORRIDOR_RATIO = 5;
     final static int MIN_CORRIDOR_SIZE = 6;
     final static int MAX_CORRIDOR_SIZE = 7;
@@ -30,7 +30,7 @@ public interface Constants {
     final static int MIN_EXPANSION_SIZE = 9;
     final static int MAX_EXPANSION_SIZE = 10;
     final static int ROOM_ID_SWITCH = 11;
-    final static int ROOM_BRANCHING_TRIES = 12;
+    final static int TRIES_PER_EXPANSION = 12;
     final static int CLEAN_WALLS_SWITCH = 13;
 
     // Tiles

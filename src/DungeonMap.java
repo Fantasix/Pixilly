@@ -28,8 +28,8 @@ public class DungeonMap implements Constants {
             put(MAX_ROOM_SIZE, 10);
             put(ROOM_AMOUNT, 10);
             put(TRIES_PER_ROOM, 10);
-            put(ROOM_BRANCHING, 4);
-            put(ROOM_BRANCHING_TRIES, 6);
+            put(ROOM_EXPANSION, 4);
+            put(TRIES_PER_EXPANSION, 6);
             put(CORRIDOR_RATIO, 5);
             put(MIN_CORRIDOR_SIZE, 2);
             put(MAX_CORRIDOR_SIZE, 6);
@@ -147,7 +147,7 @@ public class DungeonMap implements Constants {
 
         // First Room
         Room room = makeRoom((int) Math.floor(sizeX / 2), (int) Math.floor(sizeY / 2));
-        for (int i = 0; i < getParam(ROOM_BRANCHING); i++) {
+        for (int i = 0; i < getParam(ROOM_EXPANSION); i++) {
             expandRoom(room);
         }
         finishingFixes(room);
@@ -155,9 +155,9 @@ public class DungeonMap implements Constants {
         while (roomCount < getParam(ROOM_AMOUNT) && roomTries < getParam(TRIES_PER_ROOM) * (getParam(ROOM_AMOUNT) - 1)) {
             room = newRandomRoom();
             if (room != null) {
-                for (int i = 0; i < getParam(ROOM_BRANCHING); i++) {
+                for (int i = 0; i < getParam(ROOM_EXPANSION); i++) {
                     int tries = 0;
-                    while (!expandRoom(room) && tries < getParam(ROOM_BRANCHING_TRIES)) tries++;
+                    while (!expandRoom(room) && tries < getParam(TRIES_PER_EXPANSION)) tries++;
                 }
                 finishingFixes(room);
             }
@@ -213,11 +213,11 @@ public class DungeonMap implements Constants {
 
     public boolean placeDownStairs() {
         boolean success = true;
-        Room downStairs = getDeepestRoom();
+        Room downStairsRoom = getDeepestRoom();
         Tile downStairsTile;
 
-        if (downStairs.getFreeTiles().size() == 0) {
-            ArrayList<Tile> edgeTilesCopy = (ArrayList<Tile>) downStairs.getEdgeTiles().clone();
+        if (downStairsRoom.getFreeTiles().size() == 0) {
+            ArrayList<Tile> edgeTilesCopy = (ArrayList<Tile>) downStairsRoom.getEdgeTiles().clone();
             downStairsTile = (Tile) chooseRandom(edgeTilesCopy);
             int x = downStairsTile.getX();
             int y = downStairsTile.getY();
@@ -234,14 +234,14 @@ public class DungeonMap implements Constants {
             }
 
             if (success) {
-                downStairs.removeEdgeTile(downStairsTile.getX(), downStairsTile.getY());
-                downStairs.setTile(downStairsTile.getX(), downStairsTile.getY(), TILE_DOWNSTAIRS);
+                downStairsRoom.removeEdgeTile(downStairsTile.getX(), downStairsTile.getY());
+                downStairsRoom.setTile(downStairsTile.getX(), downStairsTile.getY(), TILE_DOWNSTAIRS);
                 setTile(downStairsTile.getX(), downStairsTile.getY(), TILE_DOWNSTAIRS);
             }
         } else {
-            downStairsTile = (Tile) chooseRandom(downStairs.getFreeTiles());
-            downStairs.removeFreeTile(downStairsTile.getX(), downStairsTile.getY());
-            downStairs.setTile(downStairsTile.getX(), downStairsTile.getY(), TILE_DOWNSTAIRS);
+            downStairsTile = (Tile) chooseRandom(downStairsRoom.getFreeTiles());
+            downStairsRoom.removeFreeTile(downStairsTile.getX(), downStairsTile.getY());
+            downStairsRoom.setTile(downStairsTile.getX(), downStairsTile.getY(), TILE_DOWNSTAIRS);
             setTile(downStairsTile.getX(), downStairsTile.getY(), TILE_DOWNSTAIRS);
         }
 
@@ -265,34 +265,6 @@ public class DungeonMap implements Constants {
                         if (getTile(x, y - 1) == TILE_WALL) yCount++;
 
                         if (xCount > 0 && yCount > 0) {
-                            setTile(x, y, TILE_WALL_CORNER);
-                            room.setTile(x, y, TILE_WALL_CORNER);
-                        }
-                    }
-
-                    // Wall fix (1 Empty 1 wall, 2 corners)
-                    if (getTile(x, y) == TILE_WALL) {
-
-                        int wallCount = 0;
-                        int cornerCount = 0;
-                        int emptyCount = 0;
-
-                        if (getTile(x + 1, y) == TILE_WALL) wallCount++;
-                        if (getTile(x - 1, y) == TILE_WALL) wallCount++;
-                        if (getTile(x, y + 1) == TILE_WALL) wallCount++;
-                        if (getTile(x, y - 1) == TILE_WALL) wallCount++;
-
-                        if (getTile(x + 1, y) == TILE_WALL_CORNER) cornerCount++;
-                        if (getTile(x - 1, y) == TILE_WALL_CORNER) cornerCount++;
-                        if (getTile(x, y + 1) == TILE_WALL_CORNER) cornerCount++;
-                        if (getTile(x, y - 1) == TILE_WALL_CORNER) cornerCount++;
-
-                        if (getTile(x + 1, y) == TILE_EMPTY || getTile(x + 1, y) == TILE_FLOOR_EDGE) emptyCount++;
-                        if (getTile(x - 1, y) == TILE_EMPTY || getTile(x - 1, y) == TILE_FLOOR_EDGE) emptyCount++;
-                        if (getTile(x, y + 1) == TILE_EMPTY || getTile(x, y + 1) == TILE_FLOOR_EDGE) emptyCount++;
-                        if (getTile(x, y - 1) == TILE_EMPTY || getTile(x, y - 1) == TILE_FLOOR_EDGE) emptyCount++;
-
-                        if (emptyCount == 1 && wallCount == 1 && cornerCount == 2) {
                             setTile(x, y, TILE_WALL_CORNER);
                             room.setTile(x, y, TILE_WALL_CORNER);
                         }
@@ -449,7 +421,7 @@ public class DungeonMap implements Constants {
 
                             } else if (getTile(x, y) == TILE_WALL || getTile(x, y) == TILE_WALL_CORNER) {
                                 setTile(x, y, TILE_FLOOR_EDGE);
-                                room.addTile(x, y, TILE_FLOOR_EDGE);
+                                room.setTile(x, y, TILE_FLOOR_EDGE);
                                 room.addEdgeTile(x, y, TILE_FLOOR_EDGE);
                                 mapFreeWalls.remove(new Cell(x, y));
 

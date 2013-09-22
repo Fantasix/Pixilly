@@ -30,6 +30,8 @@ public interface Constants {
     final static int MIN_EXPANSION_SIZE = 9;
     final static int MAX_EXPANSION_SIZE = 10;
     final static int ROOM_ID_SWITCH = 11;
+    final static int ROOM_BRANCHING_TRIES = 12;
+    final static int CLEAN_WALLS_SWITCH = 13;
 
     // Tiles
     final static int TILE_SIZE = 16;

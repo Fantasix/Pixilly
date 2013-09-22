@@ -85,10 +85,10 @@ public class Room {
         return null;
     }
 
-    public boolean removeTile(Cell cell) {
+    public boolean removeTile(int x, int y) {
         for (int i = 0; i < tiles.size(); i++) {
             Tile t = tiles.get(i);
-            if (t.getX() == cell.getX() && t.getY() == cell.getY()) {
+            if (t.getX() == x && t.getY() == y) {
                 tiles.remove(i);
                 return true;
             }
@@ -96,10 +96,10 @@ public class Room {
         return false;
     }
 
-    public boolean removeFreeTile(Cell cell) {
+    public boolean removeFreeTile(int x, int y) {
         for (int i = 0; i < freeTiles.size(); i++) {
             Tile t = freeTiles.get(i);
-            if (t.getX() == cell.getX() && t.getY() == cell.getY()) {
+            if (t.getX() == x && t.getY() == y) {
                 freeTiles.remove(i);
                 return true;
             }
@@ -107,10 +107,10 @@ public class Room {
         return false;
     }
 
-    public boolean removeEdgeTile(Cell cell) {
+    public boolean removeEdgeTile(int x, int y) {
         for (int i = 0; i < edgeTiles.size(); i++) {
             Tile t = edgeTiles.get(i);
-            if (t.getX() == cell.getX() && t.getY() == cell.getY()) {
+            if (t.getX() == x && t.getY() == y) {
                 edgeTiles.remove(i);
                 return true;
             }

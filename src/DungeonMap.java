@@ -97,10 +97,15 @@ public class DungeonMap implements Constants {
     }
 
     public Room getDeepestRoom() {
+        int rId = 0;
+        int depth = 0;
         for (Room r : mapRooms) {
-            if (r.getDepth() == getMaxDepth()) return r;
+            if (r.getDepth() > depth && !r.isCorridor()) {
+                depth = r.getDepth();
+                rId = r.getId();
+            }
         }
-        return mapRooms.get(0);
+        return mapRooms.get(rId);
     }
 
     public Object chooseRandom(ArrayList array) {
@@ -150,22 +155,34 @@ public class DungeonMap implements Constants {
         }
 
         // First Room
-        Room room = makeRoom((int) Math.floor(sizeX / 2), (int) Math.floor(sizeY / 2));
+        Room firstRoom = makeRoom((int) Math.floor(sizeX / 2), (int) Math.floor(sizeY / 2));
         for (int i = 0; i < getParam(ROOM_EXPANSION); i++) {
-            expandRoom(room);
+            expandRoom(firstRoom);
         }
-        finishingFixes(room);
+        finishingFixes(firstRoom);
 
         while (roomCount < getParam(ROOM_AMOUNT) && roomTries < getParam(TRIES_PER_ROOM) * (getParam(ROOM_AMOUNT) - 1)) {
-            room = newRandomRoom();
-            if (room != null) {
-                for (int i = 0; i < getParam(ROOM_EXPANSION); i++) {
-                    int tries = 0;
-                    while (!expandRoom(room) && tries < getParam(TRIES_PER_EXPANSION)) tries++;
+            // Choose between Room & Corridor
+            // Room
+            if (getRand(0, 100) > getParam(CORRIDOR_RATIO)) {
+                Room newRoom = newRandomRoom();
+                if (newRoom != null) {
+                    for (int i = 0; i < getParam(ROOM_EXPANSION); i++) {
+                        int tries = 0;
+                        while (!expandRoom(newRoom) && tries < getParam(TRIES_PER_EXPANSION)) tries++;
+                    }
+                    finishingFixes(newRoom);
                 }
-                finishingFixes(room);
+                roomTries++;
             }
-            roomTries++;
+            // Corridor
+            else {
+                Room corridor = newRandomCorridor();
+                if (corridor != null) {
+                    finishingFixes(corridor);
+                }
+                roomTries++;
+            }
         }
 
         // Adding in and out stairs
@@ -257,20 +274,51 @@ public class DungeonMap implements Constants {
             for (int x = 1; x < sizeX - 1; x++) {
                 for (int y = 1; y < sizeY; y++) {
 
-                    // Wall fix (1 vertical wall & 1 horizontal wall)
+                    // Wall fix (3 walls + 1 empty)
                     if (getTile(x, y) == TILE_WALL) {
 
-                        int xCount = 0;
-                        int yCount = 0;
+                        int wallX = 0;
+                        int wallY = 0;
+                        int cornerX = 0;
+                        int cornerY = 0;
 
-                        if (getTile(x + 1, y) == TILE_WALL) xCount++;
-                        if (getTile(x - 1, y) == TILE_WALL) xCount++;
-                        if (getTile(x, y + 1) == TILE_WALL) yCount++;
-                        if (getTile(x, y - 1) == TILE_WALL) yCount++;
+                        if (getTile(x + 1, y) == TILE_WALL) wallX++;
+                        if (getTile(x - 1, y) == TILE_WALL) wallX++;
+                        if (getTile(x, y + 1) == TILE_WALL) wallY++;
+                        if (getTile(x, y - 1) == TILE_WALL) wallY++;
 
-                        if (xCount > 0 && yCount > 0) {
+                        if (getTile(x + 1, y) == TILE_WALL_CORNER) cornerX++;
+                        if (getTile(x - 1, y) == TILE_WALL_CORNER) cornerX++;
+                        if (getTile(x, y + 1) == TILE_WALL_CORNER) cornerY++;
+                        if (getTile(x, y - 1) == TILE_WALL_CORNER) cornerY++;
+
+                        if (cornerX == 2 && cornerY == 2) {
                             setTile(x, y, TILE_WALL_CORNER);
                             room.setTile(x, y, TILE_WALL_CORNER);
+                        } else if (wallX == 1 && (cornerY + wallY == 2)) {
+                            if (getTile(x + 1, y) == TILE_WALL || getTile(x + 1, y) == TILE_WALL_CORNER) {
+                                if (getTile(x + 2, y) == TILE_WALL || getTile(x + 2, y) == TILE_WALL_CORNER) {
+                                    setTile(x, y, TILE_WALL_CORNER);
+                                    room.setTile(x, y, TILE_WALL_CORNER);
+                                }
+                            } else {
+                                if (getTile(x - 2, y) == TILE_WALL || getTile(x - 2, y) == TILE_WALL_CORNER) {
+                                    setTile(x, y, TILE_WALL_CORNER);
+                                    room.setTile(x, y, TILE_WALL_CORNER);
+                                }
+                            }
+                        } else if (wallY == 1 && (cornerX + wallX == 2)) {
+                            if (getTile(x, y + 1) == TILE_WALL || getTile(x, y + 1) == TILE_WALL_CORNER) {
+                                if (getTile(x, y + 2) == TILE_WALL || getTile(x, y + 2) == TILE_WALL_CORNER) {
+                                    setTile(x, y, TILE_WALL_CORNER);
+                                    room.setTile(x, y, TILE_WALL_CORNER);
+                                }
+                            } else {
+                                if (getTile(x, y - 2) == TILE_WALL || getTile(x, y - 2) == TILE_WALL_CORNER) {
+                                    setTile(x, y, TILE_WALL_CORNER);
+                                    room.setTile(x, y, TILE_WALL_CORNER);
+                                }
+                            }
                         }
                     }
 
@@ -396,11 +444,14 @@ public class DungeonMap implements Constants {
                                 setTile(x, y, TILE_WALL_CORNER);
                                 room.addTile(x, y, TILE_WALL_CORNER);
                             }
+
                             // Wall
                             else if (getTile(x, y) == TILE_EMPTY) {
+
                                 mapFreeWalls.add(new Cell(x, y));
                                 setTile(x, y, TILE_WALL);
                                 room.addTile(x, y, TILE_WALL);
+
                             }
 
                         } else if (getTile(x, y) == TILE_WALL_CORNER && getParam(CLEAN_WALLS_SWITCH) == 1) {
@@ -428,9 +479,6 @@ public class DungeonMap implements Constants {
                                 room.setTile(x, y, TILE_FLOOR_EDGE);
                                 room.addEdgeTile(x, y, TILE_FLOOR_EDGE);
                                 mapFreeWalls.remove(new Cell(x, y));
-
-                            } else if (getTile(x, y) == TILE_FLOOR_EDGE) {
-
                             }
                         } else {
                             if (getTile(x, y) == TILE_EMPTY || getTile(x, y) == TILE_WALL || getTile(x, y) == TILE_WALL_CORNER || getTile(x, y) == TILE_FLOOR_EDGE) {
@@ -631,6 +679,183 @@ public class DungeonMap implements Constants {
         }
 
         return newRoom;
+    }
+
+    public Room makeCorridor(int cX, int cY, int offsetX, int offsetY) {
+        Room newCorridor = null;
+        int depth = 0;
+        int maxLength = getRand(getParam(MIN_CORRIDOR_SIZE), getParam(MAX_CORRIDOR_SIZE));
+        int length = 0;
+        int width = 0;
+        int height = 0;
+        int pX = 0, pY = 0;
+        boolean canPlace = false;
+
+        Room origin = getRoom(cX, cY);
+        depth = origin != null ? origin.getDepth() + 1 : 0;
+
+        if (offsetX == 1) {
+            for (int i = 1; i < maxLength + 1; i++) {
+                if (i == maxLength || cX + i >= sizeX - 1 || (getTile(cX + i, cY) != TILE_EMPTY && getTile(cX + i, cY) != TILE_WALL && getTile(cX + i, cY) != TILE_WALL_CORNER)) {
+                    length = i - 1;
+                    width = length;
+                    height = 3;
+                    pX = cX;
+                    pY = cY - 1;
+                    if (length > getParam(MIN_CORRIDOR_SIZE)) canPlace = true;
+                    break;
+                }
+            }
+        } else if (offsetX == -1) {
+            for (int i = 1; i < maxLength + 1; i++) {
+                if (i == maxLength || cX - i <= 1 || (getTile(cX - i, cY) != TILE_EMPTY && getTile(cX - i, cY) != TILE_WALL && getTile(cX - i, cY) != TILE_WALL_CORNER)) {
+                    length = i - 1;
+                    width = length;
+                    height = 3;
+                    pX = cX - length + 1;
+                    pY = cY - 1;
+                    if (length > getParam(MIN_CORRIDOR_SIZE)) canPlace = true;
+                    break;
+                }
+            }
+        } else if (offsetY == 1) {
+            for (int i = 1; i < maxLength + 1; i++) {
+                if (i == maxLength || cY + i >= sizeY - 1 || (getTile(cX, cY + i) != TILE_EMPTY && getTile(cX, cY + i) != TILE_WALL && getTile(cX, cY + i) != TILE_WALL_CORNER)) {
+                    length = i - 1;
+                    width = 3;
+                    height = length;
+                    pX = cX - 1;
+                    pY = cY;
+                    if (length > getParam(MIN_CORRIDOR_SIZE)) canPlace = true;
+                    break;
+                }
+            }
+        } else if (offsetY == -1) {
+            for (int i = 1; i < maxLength + 1; i++) {
+                if (i == maxLength || cY - i <= 1 || (getTile(cX, cY - i) != TILE_EMPTY && getTile(cX, cY - i) != TILE_WALL && getTile(cX, cY - i) != TILE_WALL_CORNER)) {
+                    length = i - 1;
+                    width = 3;
+                    height = length;
+                    pX = cX - 1;
+                    pY = cY - length + 1;
+                    if (length > getParam(MIN_CORRIDOR_SIZE)) canPlace = true;
+                    break;
+                }
+            }
+        }
+
+        // Placing the tiles
+        if (canPlace) {
+            newCorridor = new Room(mapRooms.size(), depth);
+            newCorridor.setCorridor(true);
+
+            for (int x = pX; x < pX + width; x++) {
+
+                for (int y = pY; y < pY + height; y++) {
+
+                    if (x == pX || x == pX + width - 1 || y == pY || y == pY + height - 1) {
+
+                        // North-West
+                        if (x == pX && y == pY) {
+                            setTile(x, y, TILE_WALL_CORNER);
+                            newCorridor.addTile(x, y, TILE_WALL_CORNER);
+                        }
+                        // South-West
+                        else if (x == pX && y == pY + height - 1) {
+                            setTile(x, y, TILE_WALL_CORNER);
+                            newCorridor.addTile(x, y, TILE_WALL_CORNER);
+                        }
+                        // South-East
+                        else if (x == pX + width - 1 && y == pY + height - 1) {
+                            setTile(x, y, TILE_WALL_CORNER);
+                            newCorridor.addTile(x, y, TILE_WALL_CORNER);
+                        }
+                        // North-East
+                        else if (x == pX + width - 1 && y == pY) {
+                            setTile(x, y, TILE_WALL_CORNER);
+                            newCorridor.addTile(x, y, TILE_WALL_CORNER);
+                        }
+                        // Wall
+                        else if (getTile(x, y) == TILE_EMPTY) {
+                            mapFreeWalls.add(new Cell(x, y));
+                            setTile(x, y, TILE_WALL);
+                            newCorridor.addTile(x, y, TILE_WALL);
+                        }
+
+                    } else {
+
+                        if (getTile(x, y) == TILE_EMPTY) {
+                            setTile(x, y, TILE_FLOOR_EDGE);
+                            newCorridor.addTile(x, y, TILE_FLOOR_EDGE);
+                            newCorridor.addEdgeTile(x, y, TILE_FLOOR_EDGE);
+                        }
+
+                    }
+
+                }
+
+            }
+
+            mapRooms.add(newCorridor);
+            roomCount++;
+        }
+
+        return newCorridor;
+    }
+
+    // A corridor is a 3 wide room
+    public Room newRandomCorridor() {
+        Room newCorridor = null;
+
+        Cell theDoor = (Cell) chooseRandom(mapFreeWalls);
+
+        int offsetX = 0;
+        int offsetY = 0;
+        int doorX = theDoor.getX(), doorY = theDoor.getY();
+        // East
+        if (getTile(doorX + 1, doorY) == TILE_EMPTY) {
+            offsetX = 1;
+        }
+        // West
+        else if (getTile(doorX - 1, doorY) == TILE_EMPTY) {
+            offsetX = -1;
+        }
+        // North
+        else if (getTile(doorX, doorY - 1) == TILE_EMPTY) {
+            offsetY = -1;
+        }
+        // South
+        else if (getTile(doorX, doorY + 1) == TILE_EMPTY) {
+            offsetY = 1;
+        }
+
+        if (offsetX == 0 && offsetY == 0) {
+            mapFreeWalls.remove(theDoor);
+        } else {
+            newCorridor = makeCorridor(theDoor.getX(), theDoor.getY(), offsetX, offsetY);
+            if (newCorridor != null) {
+                setTile(theDoor.getX(), theDoor.getY(), TILE_DOOR);
+                mapFreeWalls.remove(theDoor);
+
+                // Turn top and bottom walls of the door to corners
+                if (offsetX == 1 || offsetX == -1) {
+                    setTile(theDoor.getX(), theDoor.getY() - 1, TILE_WALL_CORNER);
+                    mapFreeWalls.remove(new Cell(theDoor.getX(), theDoor.getY() - 1));
+                    setTile(theDoor.getX(), theDoor.getY() + 1, TILE_WALL_CORNER);
+                    mapFreeWalls.remove(new Cell(theDoor.getX(), theDoor.getY() + 1));
+                }
+                // Turn left and right walls of the door to corners
+                else {
+                    setTile(theDoor.getX() - 1, theDoor.getY(), TILE_WALL_CORNER);
+                    mapFreeWalls.remove(new Cell(theDoor.getX() - 1, theDoor.getY()));
+                    setTile(theDoor.getX() + 1, theDoor.getY(), TILE_WALL_CORNER);
+                    mapFreeWalls.remove(new Cell(theDoor.getX() + 1, theDoor.getY()));
+                }
+
+            }
+        }
+
+        return newCorridor;
     }
 
     // Get the corresponding tile number

@@ -10,6 +10,8 @@ import java.util.ArrayList;
 public class Room {
     private int id;
     private int depth = 0;
+    private int type = 0;
+    private boolean isCorridor = false;
     private ArrayList<Tile> tiles = new ArrayList<Tile>();
     private ArrayList<Tile> freeTiles = new ArrayList<Tile>();
     private ArrayList<Tile> edgeTiles = new ArrayList<Tile>();
@@ -25,6 +27,14 @@ public class Room {
 
     public int getId() {
         return id;
+    }
+
+    public boolean isCorridor() {
+        return isCorridor;
+    }
+
+    public void setCorridor(boolean corridor) {
+        isCorridor = corridor;
     }
 
     public int getDepth() {
